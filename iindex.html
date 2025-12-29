@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Anime Watch Log</title>
+<style>
+:root {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --text: #e5e7eb;
+  --btn: #22c55e;
+}
+.light {
+  --bg: #f8fafc;
+  --card: #e2e8f0;
+  --text: #020617;
+  --btn: #16a34a;
+}
+body {
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  padding: 20px;
+  transition: 0.3s;
+}
+h1 { text-align: center; }
+input, select, button {
+  padding: 8px;
+  margin: 5px 0;
+  width: 100%;
+  border-radius: 6px;
+  border: none;
+}
+button {
+  background: var(--btn);
+  font-weight: bold;
+  cursor: pointer;
+}
+.card {
+  background: var(--card);
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+small { opacity: 0.7; }
+.toggle {
+  margin-bottom: 10px;
+}
+</style>
+</head>
+<body>
+
+<h1>📺 Anime Watch Log</h1>
+
+<button class="toggle" onclick="gantiTema()">🌙 / ☀️ Ganti Tema</button>
+
+<input id="judul" placeholder="Judul Anime">
+<input id="episode" placeholder="Episode Terakhir">
+<select id="status">
+  <option value="Ongoing">Ongoing</option>
+  <option value="Tamat">Tamat</option>
+</select>
+
+<button onclick="simpan()">Simpan</button>
+
+<div id="list"></div>
+
+<script>
+let data = JSON.parse(localStorage.getItem("animeLog")) || [];
+let tema = localStorage.getItem("tema") || "dark";
+
+if (tema === "light") document.body.classList.add("light");
+
+function gantiTema() {
+  document.body.classList.toggle("light");
+  tema = document.body.classList.contains("light") ? "light" : "dark";
+  localStorage.setItem("tema", tema);
+}
+
+function render() {
+  list.innerHTML = "";
+  data.forEach((a, i) => {
+    list.innerHTML += `
+      <div class="card">
+        <b>${a.judul}</b><br>
+        Episode: ${a.episode}<br>
+        Status: ${a.status}<br>
+        <small>${a.waktu}</small><br>
+        <button onclick="hapus(${i})">Hapus</button>
+      </div>`;
+  });
+}
+
+function simpan() {
+  let judul = judulInput.value = document.getElementById("judul").value;
+  let episode = document.getElementById("episode").value;
+  let status = document.getElementById("status").value;
+
+  if (!judul || !episode) return alert("Isi semua!");
+
+  data.unshift({
+    judul,
+    episode,
+    status,
+    waktu: new Date().toLocaleString()
+  });
