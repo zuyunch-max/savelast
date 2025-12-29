@@ -2,7 +2,8 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Anime Watch Log</title>
+<title>SaveLast - Anime Watch Log</title>
+
 <style>
 :root {
   --bg: #0f172a;
@@ -10,12 +11,14 @@
   --text: #e5e7eb;
   --btn: #22c55e;
 }
+
 .light {
   --bg: #f8fafc;
   --card: #e2e8f0;
   --text: #020617;
   --btn: #16a34a;
 }
+
 body {
   font-family: Arial, sans-serif;
   background: var(--bg);
@@ -23,42 +26,62 @@ body {
   padding: 20px;
   transition: 0.3s;
 }
-h1 { text-align: center; }
+
+h1 {
+  text-align: center;
+}
+
 input, select, button {
-  padding: 8px;
-  margin: 5px 0;
   width: 100%;
+  padding: 8px;
+  margin: 6px 0;
   border-radius: 6px;
   border: none;
+  font-size: 14px;
 }
+
 button {
   background: var(--btn);
   font-weight: bold;
   cursor: pointer;
 }
+
 .card {
   background: var(--card);
-  padding: 10px;
+  padding: 12px;
   border-radius: 8px;
   margin-top: 10px;
 }
-small { opacity: 0.7; }
+
+small {
+  opacity: 0.7;
+}
+
 .toggle {
   margin-bottom: 10px;
 }
 </style>
 </head>
+
 <body>
 
-<h1>📺 Anime Watch Log</h1>
+<h1>📺 SaveLast</h1>
 
 <button class="toggle" onclick="gantiTema()">🌙 / ☀️ Ganti Tema</button>
 
-<input id="judul" placeholder="Judul Anime">
+<input id="judul" placeholder="Judul Anime (contoh: 99 Tahun Hidup)">
+<input id="season" placeholder="Season Terakhir (contoh: 2)">
 <input id="episode" placeholder="Episode Terakhir">
+
 <select id="status">
   <option value="Ongoing">Ongoing</option>
   <option value="Tamat">Tamat</option>
+</select>
+
+<select id="sort" onchange="sortData()">
+  <option value="">-- Urutkan Judul --</option>
+  <option value="az">0–9 lalu A–Z</option>
+  <option value="za">Z–A lalu 9–0</option>
 </select>
 
 <button onclick="simpan()">Simpan</button>
@@ -69,7 +92,9 @@ small { opacity: 0.7; }
 let data = JSON.parse(localStorage.getItem("animeLog")) || [];
 let tema = localStorage.getItem("tema") || "dark";
 
-if (tema === "light") document.body.classList.add("light");
+if (tema === "light") {
+  document.body.classList.add("light");
+}
 
 function gantiTema() {
   document.body.classList.toggle("light");
@@ -77,30 +102,90 @@ function gantiTema() {
   localStorage.setItem("tema", tema);
 }
 
-function render() {
-  list.innerHTML = "";
-  data.forEach((a, i) => {
-    list.innerHTML += `
-      <div class="card">
-        <b>${a.judul}</b><br>
-        Episode: ${a.episode}<br>
-        Status: ${a.status}<br>
-        <small>${a.waktu}</small><br>
-        <button onclick="hapus(${i})">Hapus</button>
-      </div>`;
-  });
-}
-
 function simpan() {
-  let judul = judulInput.value = document.getElementById("judul").value;
-  let episode = document.getElementById("episode").value;
+  let judul = document.getElementById("judul").value.trim();
+  let season = document.getElementById("season").value.trim();
+  let episode = document.getElementById("episode").value.trim();
   let status = document.getElementById("status").value;
 
-  if (!judul || !episode) return alert("Isi semua!");
+  if (!judul || !season || !episode) {
+    alert("Judul, season, dan episode harus diisi!");
+    return;
+  }
 
   data.unshift({
     judul,
+    season,
     episode,
     status,
     waktu: new Date().toLocaleString()
   });
+
+  localStorage.setItem("animeLog", JSON.stringify(data));
+  render();
+
+  document.getElementById("judul").value = "";
+  document.getElementById("season").value = "";
+  document.getElementById("episode").value = "";
+}
+
+function sortData() {
+  let type = document.getElementById("sort").value;
+
+  if (type === "az") {
+    data.sort((a, b) => {
+      let aIsNum = /^\d/.test(a.judul);
+      let bIsNum = /^\d/.test(b.judul);
+
+      if (aIsNum && !bIsNum) return -1;
+      if (!aIsNum && bIsNum) return 1;
+
+      return a.judul.localeCompare(b.judul, 'id', { sensitivity: 'base' });
+    });
+  }
+
+  if (type === "za") {
+    data.sort((a, b) => {
+      let aIsNum = /^\d/.test(a.judul);
+      let bIsNum = /^\d/.test(b.judul);
+
+      if (aIsNum && !bIsNum) return 1;
+      if (!aIsNum && bIsNum) return -1;
+
+      return b.judul.localeCompare(a.judul, 'id', { sensitivity: 'base' });
+    });
+  }
+
+  localStorage.setItem("animeLog", JSON.stringify(data));
+  render();
+}
+
+function render() {
+  let list = document.getElementById("list");
+  list.innerHTML = "";
+
+  data.forEach((a, i) => {
+    list.innerHTML += `
+      <div class="card">
+        <b>${a.judul}</b><br>
+        Season: ${a.season}<br>
+        Episode: ${a.episode}<br>
+        Status: ${a.status}<br>
+        <small>${a.waktu}</small><br><br>
+        <button onclick="hapus(${i})">Hapus</button>
+      </div>
+    `;
+  });
+}
+
+function hapus(i) {
+  data.splice(i, 1);
+  localStorage.setItem("animeLog", JSON.stringify(data));
+  render();
+}
+
+render();
+</script>
+
+</body>
+</html>
